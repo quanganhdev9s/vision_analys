@@ -8,7 +8,7 @@ final class NativeVisionAnalyzer: NativeVisionApi {
     let quality = quality(of: image)
     let request = VNDetectHumanHandPoseRequest()
     request.maximumHandCount = 2
-    try VNImageRequestHandler(cgImage: image.cgImage!, orientation: .up).perform([request])
+    try VNImageRequestHandler(cgImage: normalizedCGImage(image), orientation: .up).perform([request])
     let hands = request.results ?? []
     var coverage = 0.0
     var inside = false
@@ -36,7 +36,7 @@ final class NativeVisionAnalyzer: NativeVisionApi {
     let image = try load(imagePath)
     let quality = quality(of: image)
     let request = VNDetectFaceRectanglesRequest()
-    try VNImageRequestHandler(cgImage: image.cgImage!, orientation: .up).perform([request])
+    try VNImageRequestHandler(cgImage: normalizedCGImage(image), orientation: .up).perform([request])
     let faces = request.results ?? []
     let box = faces.first?.boundingBox
     let coverage = box.map { Double($0.width * $0.height) } ?? 0
@@ -84,4 +84,12 @@ private func quality(of image: UIImage) -> ImageQuality {
   var sum = 0.0, square = 0.0, count = 0.0
   for y in 1..<(height - 1) { for x in 1..<(width - 1) { let i = y * width + x; let lap = 4 * gray[i] - gray[i - width] - gray[i + width] - gray[i - 1] - gray[i + 1]; sum += lap; square += lap * lap; count += 1 } }
   return ImageQuality(blur: count == 0 ? 0 : square / count - (sum / count) * (sum / count), brightness: brightness / Double(width * height))
+}
+
+/// Vision receives pixels in their displayed orientation. `UIImage.cgImage` alone
+/// drops EXIF/UI image orientation, which can make a portrait hand appear rotated.
+private func normalizedCGImage(_ image: UIImage) -> CGImage {
+  if image.imageOrientation == .up, let cgImage = image.cgImage { return cgImage }
+  let renderer = UIGraphicsImageRenderer(size: image.size)
+  return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: image.size)) }.cgImage!
 }
