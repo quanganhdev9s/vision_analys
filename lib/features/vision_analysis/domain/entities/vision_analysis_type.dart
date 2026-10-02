@@ -1,0 +1,1 @@
+enum VisionAnalysisType { palm, face }

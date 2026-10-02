@@ -12,5 +12,9 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    NativeVisionApiSetup.setUp(
+      binaryMessenger: engineBridge.pluginRegistry.registrar(forPlugin: "VisionAnalysis")!.messenger(),
+      api: NativeVisionAnalyzer()
+    )
   }
 }
