@@ -2,6 +2,7 @@ package com.example.vision_analyze.vision
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.Log
 import com.example.vision_analyze.vision.generated.NativeVisionApi
 import com.example.vision_analyze.vision.generated.NativeVisionConfig
 import com.example.vision_analyze.vision.generated.NativeVisionResult
@@ -32,8 +33,21 @@ class NativeVisionAnalyzer(private val context: Context) : NativeVisionApi {
   override suspend fun analyzeFace(imagePath: String, config: NativeVisionConfig): NativeVisionResult {
     val bitmap = bitmap(imagePath)
     val quality = ImageQualityAnalyzer.analyze(bitmap)
-    val options = FaceDetectorOptions.Builder().setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE).setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE).build()
-    val faces = Tasks.await(FaceDetection.getClient(options).process(InputImage.fromFilePath(context, android.net.Uri.fromFile(File(imagePath)))))
+    val options = FaceDetectorOptions.Builder()
+      .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+      .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+      .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+      .build()
+    val detector = FaceDetection.getClient(options)
+    val faces = try {
+      Tasks.await(detector.process(InputImage.fromFilePath(context, android.net.Uri.fromFile(File(imagePath)))))
+    } catch (error: Exception) {
+      Log.e(TAG, "Face detection failed for ${bitmap.width}x${bitmap.height} image", error)
+      throw FlutterError("FACE_PROCESSING_FAILED", "Android face detection failed.", error.message)
+    } finally {
+      detector.close()
+    }
+    Log.d(TAG, "Face detection completed: count=${faces.size}, image=${bitmap.width}x${bitmap.height}")
     val issues = qualityIssues(quality, config).toMutableList()
     if (faces.isEmpty()) issues += "NO_FACE"
     if (faces.size > 1) issues += "MULTIPLE_FACES"
@@ -55,4 +69,8 @@ class NativeVisionAnalyzer(private val context: Context) : NativeVisionApi {
     if (quality.brightnessScore > config.maxBrightness) add("IMAGE_TOO_BRIGHT")
   }
   private fun result(detected: Boolean, count: Int, inside: Boolean, coverage: Double, coverageEnough: Boolean, quality: ImageQuality, config: NativeVisionConfig, issues: List<String>, handedness: String?, yaw: Double? = null, roll: Double? = null, pitch: Double? = null) = NativeVisionResult(detected, count.toLong(), inside, coverageEnough, quality.blurScore >= config.minBlurScore, quality.brightnessScore in config.minBrightness..config.maxBrightness, coverage, quality.blurScore, quality.brightnessScore, issues, handedness, yaw, roll, pitch)
+
+  private companion object {
+    const val TAG = "VisionAnalysis"
+  }
 }

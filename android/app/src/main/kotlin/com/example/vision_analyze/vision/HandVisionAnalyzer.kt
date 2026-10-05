@@ -15,10 +15,10 @@ class HandVisionAnalyzer(context: Context) {
   private val landmarker: HandLandmarker
 
   init {
-    // The model is intentionally not bundled: obtain a compatible model from MediaPipe
-    // and add it as android/app/src/main/assets/hand_landmarker.task.
+    // MediaPipe's Android asset loader requires an asset path containing a directory.
+    // The model is packaged at android/app/src/main/assets/mediapipe/hand_landmarker.task.
     val options = HandLandmarker.HandLandmarkerOptions.builder()
-      .setBaseOptions(BaseOptions.builder().setModelAssetPath("hand_landmarker.task").build())
+      .setBaseOptions(BaseOptions.builder().setModelAssetPath("mediapipe/hand_landmarker.task").build())
       .setRunningMode(RunningMode.IMAGE)
       .setNumHands(2)
       .build()

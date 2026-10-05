@@ -16,7 +16,7 @@ This module performs image suitability validation only. It does not perform palm
 
 Run `flutter pub get`, then `flutter run` with an Android device or an iOS device/simulator. Camera access needs a physical device; gallery works where the platform supports it.
 
-Android palm detection requires a real, compatible MediaPipe model at `android/app/src/main/assets/hand_landmarker.task`. The model is deliberately not faked or replaced with heuristic output. Until that file is added, Palm returns a friendly model-initialization error. Face analysis remains usable.
+Android palm detection packages the official MediaPipe model at `android/app/src/main/assets/mediapipe/hand_landmarker.task`. The model is deliberately not faked or replaced with heuristic output. Face analysis remains usable.
 
 If `pigeons/vision_api.dart` changes, regenerate bindings with `dart run pigeon --input pigeons/vision_api.dart`.
 
