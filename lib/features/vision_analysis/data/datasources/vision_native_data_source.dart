@@ -31,6 +31,8 @@ class VisionNativeDataSource {
         debugPrint(
           '[VisionAnalysis][Flutter][r4] type=$type '
           'detected=${result.objectDetected} count=${result.objectCount} '
+          'handedness=${result.handedness ?? "unknown"} '
+          'handSurface=${result.handSurface ?? "unknown"} '
           'inside=${result.insideFrame} coverage=${result.coverage} '
           'blur=${result.blurScore} brightness=${result.brightnessScore} '
           'issues=${result.issues}',

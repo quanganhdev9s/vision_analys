@@ -22,12 +22,13 @@ class NativeVisionAnalyzer(private val context: Context) : NativeVisionApi {
     } catch (error: Exception) {
       throw FlutterError("MODEL_NOT_AVAILABLE", "MediaPipe hand_landmarker.task is required.", error.message)
     }
+    Log.d(TAG, "Palm detection completed: count=${hand.count}, handedness=${hand.handedness ?: "unknown"}, surface=${hand.handSurface ?: "unknown"}, image=${bitmap.width}x${bitmap.height}")
     val issues = qualityIssues(quality, config).toMutableList()
     if (hand.count == 0) issues += "NO_HAND"
     if (hand.count > 1) issues += "MULTIPLE_HANDS"
     if (hand.count == 1 && hand.coverage < config.minHandCoverage) issues += "HAND_TOO_FAR"
     if (hand.count == 1 && !hand.insideFrame) issues += "HAND_TOO_CLOSE_TO_EDGE"
-    return result(hand.count > 0, hand.count, hand.insideFrame, hand.coverage, hand.coverage >= config.minHandCoverage, quality, config, issues, hand.handedness)
+    return result(hand.count > 0, hand.count, hand.insideFrame, hand.coverage, hand.coverage >= config.minHandCoverage, quality, config, issues, hand.handedness, handSurface = hand.handSurface)
   }
 
   override suspend fun analyzeFace(imagePath: String, config: NativeVisionConfig): NativeVisionResult {
@@ -68,7 +69,7 @@ class NativeVisionAnalyzer(private val context: Context) : NativeVisionApi {
     if (quality.brightnessScore < config.minBrightness) add("IMAGE_TOO_DARK")
     if (quality.brightnessScore > config.maxBrightness) add("IMAGE_TOO_BRIGHT")
   }
-  private fun result(detected: Boolean, count: Int, inside: Boolean, coverage: Double, coverageEnough: Boolean, quality: ImageQuality, config: NativeVisionConfig, issues: List<String>, handedness: String?, yaw: Double? = null, roll: Double? = null, pitch: Double? = null) = NativeVisionResult(detected, count.toLong(), inside, coverageEnough, quality.blurScore >= config.minBlurScore, quality.brightnessScore in config.minBrightness..config.maxBrightness, coverage, quality.blurScore, quality.brightnessScore, issues, handedness, yaw, roll, pitch)
+  private fun result(detected: Boolean, count: Int, inside: Boolean, coverage: Double, coverageEnough: Boolean, quality: ImageQuality, config: NativeVisionConfig, issues: List<String>, handedness: String?, yaw: Double? = null, roll: Double? = null, pitch: Double? = null, handSurface: String? = null) = NativeVisionResult(detected, count.toLong(), inside, coverageEnough, quality.blurScore >= config.minBlurScore, quality.brightnessScore in config.minBrightness..config.maxBrightness, coverage, quality.blurScore, quality.brightnessScore, issues, handedness, handSurface, yaw, roll, pitch)
 
   private companion object {
     const val TAG = "VisionAnalysis"

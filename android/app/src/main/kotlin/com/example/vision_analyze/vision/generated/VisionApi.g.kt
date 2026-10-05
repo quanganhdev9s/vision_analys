@@ -241,6 +241,7 @@ data class NativeVisionResult (
   val brightnessScore: Double,
   val issues: List<String>,
   val handedness: String? = null,
+  val handSurface: String? = null,
   val yaw: Double? = null,
   val roll: Double? = null,
   val pitch: Double? = null
@@ -259,10 +260,11 @@ data class NativeVisionResult (
       val brightnessScore = pigeonVar_list[8] as Double
       val issues = pigeonVar_list[9] as List<String>
       val handedness = pigeonVar_list[10] as String?
-      val yaw = pigeonVar_list[11] as Double?
-      val roll = pigeonVar_list[12] as Double?
-      val pitch = pigeonVar_list[13] as Double?
-      return NativeVisionResult(objectDetected, objectCount, insideFrame, sufficientCoverage, sharpEnough, lightingAcceptable, coverage, blurScore, brightnessScore, issues, handedness, yaw, roll, pitch)
+      val handSurface = pigeonVar_list[11] as String?
+      val yaw = pigeonVar_list[12] as Double?
+      val roll = pigeonVar_list[13] as Double?
+      val pitch = pigeonVar_list[14] as Double?
+      return NativeVisionResult(objectDetected, objectCount, insideFrame, sufficientCoverage, sharpEnough, lightingAcceptable, coverage, blurScore, brightnessScore, issues, handedness, handSurface, yaw, roll, pitch)
     }
   }
   fun toList(): List<Any?> {
@@ -278,6 +280,7 @@ data class NativeVisionResult (
       brightnessScore,
       issues,
       handedness,
+      handSurface,
       yaw,
       roll,
       pitch,
@@ -291,7 +294,7 @@ data class NativeVisionResult (
       return true
     }
     val other = other as NativeVisionResult
-    return VisionApiPigeonUtils.deepEquals(this.objectDetected, other.objectDetected) && VisionApiPigeonUtils.deepEquals(this.objectCount, other.objectCount) && VisionApiPigeonUtils.deepEquals(this.insideFrame, other.insideFrame) && VisionApiPigeonUtils.deepEquals(this.sufficientCoverage, other.sufficientCoverage) && VisionApiPigeonUtils.deepEquals(this.sharpEnough, other.sharpEnough) && VisionApiPigeonUtils.deepEquals(this.lightingAcceptable, other.lightingAcceptable) && VisionApiPigeonUtils.deepEquals(this.coverage, other.coverage) && VisionApiPigeonUtils.deepEquals(this.blurScore, other.blurScore) && VisionApiPigeonUtils.deepEquals(this.brightnessScore, other.brightnessScore) && VisionApiPigeonUtils.deepEquals(this.issues, other.issues) && VisionApiPigeonUtils.deepEquals(this.handedness, other.handedness) && VisionApiPigeonUtils.deepEquals(this.yaw, other.yaw) && VisionApiPigeonUtils.deepEquals(this.roll, other.roll) && VisionApiPigeonUtils.deepEquals(this.pitch, other.pitch)
+    return VisionApiPigeonUtils.deepEquals(this.objectDetected, other.objectDetected) && VisionApiPigeonUtils.deepEquals(this.objectCount, other.objectCount) && VisionApiPigeonUtils.deepEquals(this.insideFrame, other.insideFrame) && VisionApiPigeonUtils.deepEquals(this.sufficientCoverage, other.sufficientCoverage) && VisionApiPigeonUtils.deepEquals(this.sharpEnough, other.sharpEnough) && VisionApiPigeonUtils.deepEquals(this.lightingAcceptable, other.lightingAcceptable) && VisionApiPigeonUtils.deepEquals(this.coverage, other.coverage) && VisionApiPigeonUtils.deepEquals(this.blurScore, other.blurScore) && VisionApiPigeonUtils.deepEquals(this.brightnessScore, other.brightnessScore) && VisionApiPigeonUtils.deepEquals(this.issues, other.issues) && VisionApiPigeonUtils.deepEquals(this.handedness, other.handedness) && VisionApiPigeonUtils.deepEquals(this.handSurface, other.handSurface) && VisionApiPigeonUtils.deepEquals(this.yaw, other.yaw) && VisionApiPigeonUtils.deepEquals(this.roll, other.roll) && VisionApiPigeonUtils.deepEquals(this.pitch, other.pitch)
   }
 
   override fun hashCode(): Int {
@@ -307,13 +310,14 @@ data class NativeVisionResult (
     result = 31 * result + VisionApiPigeonUtils.deepHash(this.brightnessScore)
     result = 31 * result + VisionApiPigeonUtils.deepHash(this.issues)
     result = 31 * result + VisionApiPigeonUtils.deepHash(this.handedness)
+    result = 31 * result + VisionApiPigeonUtils.deepHash(this.handSurface)
     result = 31 * result + VisionApiPigeonUtils.deepHash(this.yaw)
     result = 31 * result + VisionApiPigeonUtils.deepHash(this.roll)
     result = 31 * result + VisionApiPigeonUtils.deepHash(this.pitch)
     return result
   }
   override fun toString(): String {
-    return "NativeVisionResult(objectDetected=$objectDetected, objectCount=$objectCount, insideFrame=$insideFrame, sufficientCoverage=$sufficientCoverage, sharpEnough=$sharpEnough, lightingAcceptable=$lightingAcceptable, coverage=$coverage, blurScore=$blurScore, brightnessScore=$brightnessScore, issues=$issues, handedness=$handedness, yaw=$yaw, roll=$roll, pitch=$pitch)"
+    return "NativeVisionResult(objectDetected=$objectDetected, objectCount=$objectCount, insideFrame=$insideFrame, sufficientCoverage=$sufficientCoverage, sharpEnough=$sharpEnough, lightingAcceptable=$lightingAcceptable, coverage=$coverage, blurScore=$blurScore, brightnessScore=$brightnessScore, issues=$issues, handedness=$handedness, handSurface=$handSurface, yaw=$yaw, roll=$roll, pitch=$pitch)"
   }
 }
 

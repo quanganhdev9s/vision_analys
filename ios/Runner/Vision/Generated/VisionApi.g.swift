@@ -227,6 +227,7 @@ struct NativeVisionResult: Hashable, CustomStringConvertible {
   var brightnessScore: Double
   var issues: [String]
   var handedness: String? = nil
+  var handSurface: String? = nil
   var yaw: Double? = nil
   var roll: Double? = nil
   var pitch: Double? = nil
@@ -245,9 +246,10 @@ struct NativeVisionResult: Hashable, CustomStringConvertible {
     let brightnessScore = pigeonVar_list[8] as! Double
     let issues = pigeonVar_list[9] as! [String]
     let handedness: String? = nilOrValue(pigeonVar_list[10])
-    let yaw: Double? = nilOrValue(pigeonVar_list[11])
-    let roll: Double? = nilOrValue(pigeonVar_list[12])
-    let pitch: Double? = nilOrValue(pigeonVar_list[13])
+    let handSurface: String? = nilOrValue(pigeonVar_list[11])
+    let yaw: Double? = nilOrValue(pigeonVar_list[12])
+    let roll: Double? = nilOrValue(pigeonVar_list[13])
+    let pitch: Double? = nilOrValue(pigeonVar_list[14])
 
     return NativeVisionResult(
       objectDetected: objectDetected,
@@ -261,6 +263,7 @@ struct NativeVisionResult: Hashable, CustomStringConvertible {
       brightnessScore: brightnessScore,
       issues: issues,
       handedness: handedness,
+      handSurface: handSurface,
       yaw: yaw,
       roll: roll,
       pitch: pitch
@@ -279,6 +282,7 @@ struct NativeVisionResult: Hashable, CustomStringConvertible {
       brightnessScore,
       issues,
       handedness,
+      handSurface,
       yaw,
       roll,
       pitch,
@@ -288,7 +292,7 @@ struct NativeVisionResult: Hashable, CustomStringConvertible {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return VisionApiPigeonInternal.deepEquals(lhs.objectDetected, rhs.objectDetected) && VisionApiPigeonInternal.deepEquals(lhs.objectCount, rhs.objectCount) && VisionApiPigeonInternal.deepEquals(lhs.insideFrame, rhs.insideFrame) && VisionApiPigeonInternal.deepEquals(lhs.sufficientCoverage, rhs.sufficientCoverage) && VisionApiPigeonInternal.deepEquals(lhs.sharpEnough, rhs.sharpEnough) && VisionApiPigeonInternal.deepEquals(lhs.lightingAcceptable, rhs.lightingAcceptable) && VisionApiPigeonInternal.deepEquals(lhs.coverage, rhs.coverage) && VisionApiPigeonInternal.deepEquals(lhs.blurScore, rhs.blurScore) && VisionApiPigeonInternal.deepEquals(lhs.brightnessScore, rhs.brightnessScore) && VisionApiPigeonInternal.deepEquals(lhs.issues, rhs.issues) && VisionApiPigeonInternal.deepEquals(lhs.handedness, rhs.handedness) && VisionApiPigeonInternal.deepEquals(lhs.yaw, rhs.yaw) && VisionApiPigeonInternal.deepEquals(lhs.roll, rhs.roll) && VisionApiPigeonInternal.deepEquals(lhs.pitch, rhs.pitch)
+    return VisionApiPigeonInternal.deepEquals(lhs.objectDetected, rhs.objectDetected) && VisionApiPigeonInternal.deepEquals(lhs.objectCount, rhs.objectCount) && VisionApiPigeonInternal.deepEquals(lhs.insideFrame, rhs.insideFrame) && VisionApiPigeonInternal.deepEquals(lhs.sufficientCoverage, rhs.sufficientCoverage) && VisionApiPigeonInternal.deepEquals(lhs.sharpEnough, rhs.sharpEnough) && VisionApiPigeonInternal.deepEquals(lhs.lightingAcceptable, rhs.lightingAcceptable) && VisionApiPigeonInternal.deepEquals(lhs.coverage, rhs.coverage) && VisionApiPigeonInternal.deepEquals(lhs.blurScore, rhs.blurScore) && VisionApiPigeonInternal.deepEquals(lhs.brightnessScore, rhs.brightnessScore) && VisionApiPigeonInternal.deepEquals(lhs.issues, rhs.issues) && VisionApiPigeonInternal.deepEquals(lhs.handedness, rhs.handedness) && VisionApiPigeonInternal.deepEquals(lhs.handSurface, rhs.handSurface) && VisionApiPigeonInternal.deepEquals(lhs.yaw, rhs.yaw) && VisionApiPigeonInternal.deepEquals(lhs.roll, rhs.roll) && VisionApiPigeonInternal.deepEquals(lhs.pitch, rhs.pitch)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -304,13 +308,14 @@ struct NativeVisionResult: Hashable, CustomStringConvertible {
     VisionApiPigeonInternal.deepHash(value: brightnessScore, hasher: &hasher)
     VisionApiPigeonInternal.deepHash(value: issues, hasher: &hasher)
     VisionApiPigeonInternal.deepHash(value: handedness, hasher: &hasher)
+    VisionApiPigeonInternal.deepHash(value: handSurface, hasher: &hasher)
     VisionApiPigeonInternal.deepHash(value: yaw, hasher: &hasher)
     VisionApiPigeonInternal.deepHash(value: roll, hasher: &hasher)
     VisionApiPigeonInternal.deepHash(value: pitch, hasher: &hasher)
   }
 
   public var description: String {
-    return "NativeVisionResult(objectDetected: \(String(describing: objectDetected)), objectCount: \(String(describing: objectCount)), insideFrame: \(String(describing: insideFrame)), sufficientCoverage: \(String(describing: sufficientCoverage)), sharpEnough: \(String(describing: sharpEnough)), lightingAcceptable: \(String(describing: lightingAcceptable)), coverage: \(String(describing: coverage)), blurScore: \(String(describing: blurScore)), brightnessScore: \(String(describing: brightnessScore)), issues: \(String(describing: issues)), handedness: \(String(describing: handedness)), yaw: \(String(describing: yaw)), roll: \(String(describing: roll)), pitch: \(String(describing: pitch)))"
+    return "NativeVisionResult(objectDetected: \(String(describing: objectDetected)), objectCount: \(String(describing: objectCount)), insideFrame: \(String(describing: insideFrame)), sufficientCoverage: \(String(describing: sufficientCoverage)), sharpEnough: \(String(describing: sharpEnough)), lightingAcceptable: \(String(describing: lightingAcceptable)), coverage: \(String(describing: coverage)), blurScore: \(String(describing: blurScore)), brightnessScore: \(String(describing: brightnessScore)), issues: \(String(describing: issues)), handedness: \(String(describing: handedness)), handSurface: \(String(describing: handSurface)), yaw: \(String(describing: yaw)), roll: \(String(describing: roll)), pitch: \(String(describing: pitch)))"
   }
 }
 

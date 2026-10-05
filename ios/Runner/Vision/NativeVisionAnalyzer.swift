@@ -16,6 +16,7 @@ final class NativeVisionAnalyzer: NativeVisionApi {
     var coverage = 0.0
     var inside = false
     var handedness: String?
+    var handSurface: String?
     if let hand = hands.first {
       let recognizedPoints = try hand.recognizedPoints(.all)
       let points = recognizedPoints.values.filter { $0.confidence > 0.5 }
@@ -38,15 +39,17 @@ final class NativeVisionAnalyzer: NativeVisionApi {
       @unknown default:
         handedness = nil
       }
+      handSurface = inferHandSurface(from: recognizedPoints, chirality: hand.chirality)
       visionLog("palm chirality raw=\(hand.chirality.rawValue) mapped=\(handedness ?? "Unknown")")
+      visionLog("palm surface=\(handSurface ?? "Unknown")")
     }
     var issues = quality.issues(config)
     if hands.isEmpty { issues.append("NO_HAND") }
     if hands.count > 1 { issues.append("MULTIPLE_HANDS") }
     if hands.count == 1 && coverage < config.minHandCoverage { issues.append("HAND_TOO_FAR") }
     if hands.count == 1 && !inside { issues.append("HAND_TOO_CLOSE_TO_EDGE") }
-    visionLog("palm result coverage=\(coverage) inside=\(inside) handedness=\(handedness ?? "unknown") issues=\(issues)")
-    return result(detected: !hands.isEmpty, count: hands.count, inside: inside, coverage: coverage, sufficient: coverage >= config.minHandCoverage, quality: quality, config: config, issues: issues, handedness: handedness)
+    visionLog("palm result coverage=\(coverage) inside=\(inside) handedness=\(handedness ?? "unknown") surface=\(handSurface ?? "unknown") issues=\(issues)")
+    return result(detected: !hands.isEmpty, count: hands.count, inside: inside, coverage: coverage, sufficient: coverage >= config.minHandCoverage, quality: quality, config: config, issues: issues, handedness: handedness, handSurface: handSurface)
   }
 
   func analyzeFace(imagePath: String, config: NativeVisionConfig) async throws -> NativeVisionResult {
@@ -101,8 +104,26 @@ final class NativeVisionAnalyzer: NativeVisionApi {
     visionLog("palm request revision=\(request.revision) hands=\(results.count)")
     return results
   }
-  private func result(detected: Bool, count: Int, inside: Bool, coverage: Double, sufficient: Bool, quality: ImageQuality, config: NativeVisionConfig, issues: [String], handedness: String? = nil) -> NativeVisionResult {
-    NativeVisionResult(objectDetected: detected, objectCount: Int64(count), insideFrame: inside, sufficientCoverage: sufficient, sharpEnough: quality.blur >= config.minBlurScore, lightingAcceptable: quality.brightness >= config.minBrightness && quality.brightness <= config.maxBrightness, coverage: coverage, blurScore: quality.blur, brightnessScore: quality.brightness, issues: issues, handedness: handedness, yaw: nil, roll: nil, pitch: nil)
+  private func result(detected: Bool, count: Int, inside: Bool, coverage: Double, sufficient: Bool, quality: ImageQuality, config: NativeVisionConfig, issues: [String], handedness: String? = nil, handSurface: String? = nil) -> NativeVisionResult {
+    NativeVisionResult(objectDetected: detected, objectCount: Int64(count), insideFrame: inside, sufficientCoverage: sufficient, sharpEnough: quality.blur >= config.minBlurScore, lightingAcceptable: quality.brightness >= config.minBrightness && quality.brightness <= config.maxBrightness, coverage: coverage, blurScore: quality.blur, brightnessScore: quality.brightness, issues: issues, handedness: handedness, handSurface: handSurface, yaw: nil, roll: nil, pitch: nil)
+  }
+
+  /// Vision exposes landmarks and chirality, but not a palm/back label. The
+  /// signed ordering of the index and little-finger MCP joints provides a
+  /// conservative 2D estimate; edge-on or low-confidence hands return nil.
+  private func inferHandSurface(from points: [VNHumanHandPoseObservation.JointName: VNRecognizedPoint], chirality: VNChirality) -> String? {
+    guard let wrist = points[.wrist], let index = points[.indexMCP], let little = points[.littleMCP], wrist.confidence > 0.5, index.confidence > 0.5, little.confidence > 0.5 else { return nil }
+    let indexX = index.location.x - wrist.location.x
+    let indexY = index.location.y - wrist.location.y
+    let littleX = little.location.x - wrist.location.x
+    let littleY = little.location.y - wrist.location.y
+    let cross = indexX * littleY - indexY * littleX
+    let scale = hypot(indexX, indexY) * hypot(littleX, littleY)
+    guard scale >= 0.01 else { return nil }
+    let normalizedCross = cross / scale
+    guard abs(normalizedCross) >= 0.12 else { return nil }
+    let handSign = chirality == .left ? 1.0 : -1.0
+    return normalizedCross * handSign > 0 ? "Palm" : "Back"
   }
 }
 

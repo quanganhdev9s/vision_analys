@@ -145,6 +145,7 @@ class NativeVisionResult {
     required this.brightnessScore,
     required this.issues,
     this.handedness,
+    this.handSurface,
     this.yaw,
     this.roll,
     this.pitch,
@@ -172,6 +173,8 @@ class NativeVisionResult {
 
   String? handedness;
 
+  String? handSurface;
+
   double? yaw;
 
   double? roll;
@@ -191,6 +194,7 @@ class NativeVisionResult {
       brightnessScore,
       issues,
       handedness,
+      handSurface,
       yaw,
       roll,
       pitch,
@@ -215,9 +219,10 @@ class NativeVisionResult {
       brightnessScore: result[8]! as double,
       issues: (result[9]! as List<Object?>).cast<String>(),
       handedness: result[10] as String?,
-      yaw: result[11] as double?,
-      roll: result[12] as double?,
-      pitch: result[13] as double?,
+      handSurface: result[11] as String?,
+      yaw: result[12] as double?,
+      roll: result[13] as double?,
+      pitch: result[14] as double?,
     );
   }
 
@@ -241,6 +246,7 @@ class NativeVisionResult {
         _deepEquals(brightnessScore, other.brightnessScore) &&
         _deepEquals(issues, other.issues) &&
         _deepEquals(handedness, other.handedness) &&
+        _deepEquals(handSurface, other.handSurface) &&
         _deepEquals(yaw, other.yaw) &&
         _deepEquals(roll, other.roll) &&
         _deepEquals(pitch, other.pitch);
@@ -252,7 +258,7 @@ class NativeVisionResult {
 
   @override
   String toString() {
-    return 'NativeVisionResult(objectDetected: $objectDetected, objectCount: $objectCount, insideFrame: $insideFrame, sufficientCoverage: $sufficientCoverage, sharpEnough: $sharpEnough, lightingAcceptable: $lightingAcceptable, coverage: $coverage, blurScore: $blurScore, brightnessScore: $brightnessScore, issues: $issues, handedness: $handedness, yaw: $yaw, roll: $roll, pitch: $pitch)';
+    return 'NativeVisionResult(objectDetected: $objectDetected, objectCount: $objectCount, insideFrame: $insideFrame, sufficientCoverage: $sufficientCoverage, sharpEnough: $sharpEnough, lightingAcceptable: $lightingAcceptable, coverage: $coverage, blurScore: $blurScore, brightnessScore: $brightnessScore, issues: $issues, handedness: $handedness, handSurface: $handSurface, yaw: $yaw, roll: $roll, pitch: $pitch)';
   }
 }
 

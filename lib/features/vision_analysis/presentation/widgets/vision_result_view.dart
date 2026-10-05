@@ -40,6 +40,11 @@ class VisionResultView extends StatelessWidget {
           valid: null,
           value: palm.handedness ?? 'Unknown',
         ),
+        ValidationItem(
+          label: 'Hand surface',
+          valid: null,
+          value: palm.handSurface.label,
+        ),
       ],
       FaceValidationResult face => [
         ValidationItem(label: 'Face detected', valid: face.faceDetected),

@@ -28,6 +28,7 @@ class NativeVisionResult {
     required this.brightnessScore,
     required this.issues,
     this.handedness,
+    this.handSurface,
     this.yaw,
     this.roll,
     this.pitch,
@@ -44,6 +45,7 @@ class NativeVisionResult {
   double brightnessScore;
   List<String> issues;
   String? handedness;
+  String? handSurface;
   double? yaw;
   double? roll;
   double? pitch;

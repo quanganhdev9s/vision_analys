@@ -1,4 +1,5 @@
 import '../../domain/entities/face_validation_result.dart';
+import '../../domain/entities/hand_surface.dart';
 import '../../domain/entities/palm_validation_result.dart';
 import '../../domain/entities/vision_analysis_type.dart';
 import '../../domain/entities/vision_validation_config.dart';
@@ -50,6 +51,7 @@ class VisionAnalysisRepositoryImpl implements VisionAnalysisRepository {
         imageSharpEnough: native.sharpEnough,
         lightingAcceptable: native.lightingAcceptable,
         handedness: native.handedness,
+        handSurface: HandSurface.fromNative(native.handSurface),
         handCoverage: native.coverage,
         blurScore: native.blurScore,
         brightnessScore: native.brightnessScore,

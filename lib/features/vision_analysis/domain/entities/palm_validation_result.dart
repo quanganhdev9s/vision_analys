@@ -1,5 +1,6 @@
 import 'vision_validation_issue.dart';
 import 'vision_validation_result.dart';
+import 'hand_surface.dart';
 
 class PalmValidationResult extends VisionValidationResult {
   PalmValidationResult({
@@ -11,6 +12,7 @@ class PalmValidationResult extends VisionValidationResult {
     required this.imageSharpEnough,
     required this.lightingAcceptable,
     required this.handedness,
+    this.handSurface = HandSurface.unknown,
     required this.handCoverage,
     required this.blurScore,
     required this.brightnessScore,
@@ -25,6 +27,7 @@ class PalmValidationResult extends VisionValidationResult {
   final bool imageSharpEnough;
   final bool lightingAcceptable;
   final String? handedness;
+  final HandSurface handSurface;
   final double? handCoverage;
   @override
   final double? blurScore;

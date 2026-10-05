@@ -2,6 +2,11 @@
 
 This module performs image suitability validation only. It does not perform palmistry, face reading, personality inference, health inference, or AI interpretation.
 
+For palm analysis, native hand landmarks also provide a conservative `Palm`,
+`Back`, or `Unknown` surface estimate. The estimate is informational and is
+shown as `Hand surface`; it is not used to invalidate an otherwise suitable
+image. Edge-on or low-confidence poses intentionally return `Unknown`.
+
 ## Architecture
 
 `VisionTestPage` sends a picked/captured static image to `VisionAnalysisBloc`. The bloc calls the domain repository, which uses the type-safe Pigeon `NativeVisionApi`. Native code returns primitive DTOs; the repository maps them to `PalmValidationResult` or `FaceValidationResult` for the UI.
