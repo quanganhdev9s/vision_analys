@@ -9,7 +9,9 @@ class ValidationItem extends StatelessWidget {
   });
 
   final String label;
-  final bool valid;
+
+  /// Null means an informational value, not a validation pass or failure.
+  final bool? valid;
   final String? value;
 
   @override
@@ -21,9 +23,21 @@ class ValidationItem extends StatelessWidget {
         if (value != null) Text(value!),
         const SizedBox(width: 8),
         Icon(
-          valid ? Icons.check_circle : Icons.cancel,
-          color: valid ? Colors.green : Colors.red,
-          semanticLabel: valid ? 'Pass' : 'Fail',
+          switch (valid) {
+            true => Icons.check_circle,
+            false => Icons.cancel,
+            null => Icons.help_outline,
+          },
+          color: switch (valid) {
+            true => Colors.green,
+            false => Colors.red,
+            null => Colors.grey,
+          },
+          semanticLabel: switch (valid) {
+            true => 'Pass',
+            false => 'Fail',
+            null => 'Unknown',
+          },
         ),
       ],
     ),

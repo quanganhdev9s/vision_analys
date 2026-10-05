@@ -1,20 +1,26 @@
+import CryptoKit
 import Foundation
+import ImageIO
 import UIKit
 import Vision
 
 final class NativeVisionAnalyzer: NativeVisionApi {
   func analyzePalm(imagePath: String, config: NativeVisionConfig) async throws -> NativeVisionResult {
+    logImageInput(imagePath)
     let image = try load(imagePath)
+    let pixels = normalizedCGImage(image)
+    visionLog("palm decoded points=\(Int(image.size.width))x\(Int(image.size.height)) scale=\(image.scale) uiOrientation=\(image.imageOrientation.rawValue) rawPixels=\(image.cgImage?.width ?? 0)x\(image.cgImage?.height ?? 0) visionPixels=\(pixels.width)x\(pixels.height)")
     let quality = quality(of: image)
-    let request = VNDetectHumanHandPoseRequest()
-    request.maximumHandCount = 2
-    try VNImageRequestHandler(cgImage: normalizedCGImage(image), orientation: .up).perform([request])
-    let hands = request.results ?? []
+    let hands = try detectHands(in: pixels)
+    visionLog("palm detectedHands=\(hands.count) blur=\(quality.blur) brightness=\(quality.brightness)")
     var coverage = 0.0
     var inside = false
     var handedness: String?
     if let hand = hands.first {
-      let points = try hand.recognizedPoints(.all).values.filter { $0.confidence > 0.5 }
+      let recognizedPoints = try hand.recognizedPoints(.all)
+      let points = recognizedPoints.values.filter { $0.confidence > 0.5 }
+      let confidenceRange = recognizedPoints.values.map(\.confidence)
+      visionLog("palm landmarks total=\(recognizedPoints.count) confident=\(points.count) minConfidence=\(confidenceRange.min() ?? 0) maxConfidence=\(confidenceRange.max() ?? 0)")
       if !points.isEmpty {
         let xs = points.map { Double($0.location.x) }
         let ys = points.map { Double($0.location.y) }
@@ -22,22 +28,46 @@ final class NativeVisionAnalyzer: NativeVisionApi {
         coverage = (maxX - minX) * (maxY - minY)
         inside = minX >= config.edgeMargin && maxX <= 1 - config.edgeMargin && minY >= config.edgeMargin && maxY <= 1 - config.edgeMargin
       }
-      handedness = hand.chirality == .left ? "Left" : "Right"
+      switch hand.chirality {
+      case .left:
+        handedness = "Left"
+      case .right:
+        handedness = "Right"
+      case .unknown:
+        handedness = nil
+      @unknown default:
+        handedness = nil
+      }
+      visionLog("palm chirality raw=\(hand.chirality.rawValue) mapped=\(handedness ?? "Unknown")")
     }
     var issues = quality.issues(config)
     if hands.isEmpty { issues.append("NO_HAND") }
     if hands.count > 1 { issues.append("MULTIPLE_HANDS") }
     if hands.count == 1 && coverage < config.minHandCoverage { issues.append("HAND_TOO_FAR") }
     if hands.count == 1 && !inside { issues.append("HAND_TOO_CLOSE_TO_EDGE") }
+    visionLog("palm result coverage=\(coverage) inside=\(inside) handedness=\(handedness ?? "unknown") issues=\(issues)")
     return result(detected: !hands.isEmpty, count: hands.count, inside: inside, coverage: coverage, sufficient: coverage >= config.minHandCoverage, quality: quality, config: config, issues: issues, handedness: handedness)
   }
 
   func analyzeFace(imagePath: String, config: NativeVisionConfig) async throws -> NativeVisionResult {
+    logImageInput(imagePath)
     let image = try load(imagePath)
     let quality = quality(of: image)
     let request = VNDetectFaceRectanglesRequest()
-    try VNImageRequestHandler(cgImage: normalizedCGImage(image), orientation: .up).perform([request])
+    request.usesCPUOnly = true
+    visionLog("face decoded points=\(Int(image.size.width))x\(Int(image.size.height)) revision=\(request.revision) cpuOnly=true")
+    do {
+      try VNImageRequestHandler(cgImage: normalizedCGImage(image), orientation: .up).perform([request])
+    } catch {
+      visionLog("face request error=\(error)")
+      throw PigeonError(
+        code: "VISION_INFERENCE_CONTEXT",
+        message: "Apple Vision could not create a face inference context.",
+        details: error.localizedDescription
+      )
+    }
     let faces = request.results ?? []
+    visionLog("face detectedFaces=\(faces.count) blur=\(quality.blur) brightness=\(quality.brightness)")
     let box = faces.first?.boundingBox
     let coverage = box.map { Double($0.width * $0.height) } ?? 0
     let inside = box.map { $0.minX >= config.edgeMargin && $0.maxX <= 1 - config.edgeMargin && $0.minY >= config.edgeMargin && $0.maxY <= 1 - config.edgeMargin } ?? false
@@ -56,9 +86,44 @@ final class NativeVisionAnalyzer: NativeVisionApi {
     }
     return image
   }
+
+  /// The image pixels are normalized before this call, so Vision uses `.up`.
+  private func detectHands(in cgImage: CGImage) throws -> [VNHumanHandPoseObservation] {
+    let request = VNDetectHumanHandPoseRequest()
+    request.maximumHandCount = 2
+    do {
+      try VNImageRequestHandler(cgImage: cgImage, orientation: .up).perform([request])
+    } catch {
+      visionLog("palm request revision=\(request.revision) error=\(error)")
+      throw error
+    }
+    let results = request.results ?? []
+    visionLog("palm request revision=\(request.revision) hands=\(results.count)")
+    return results
+  }
   private func result(detected: Bool, count: Int, inside: Bool, coverage: Double, sufficient: Bool, quality: ImageQuality, config: NativeVisionConfig, issues: [String], handedness: String? = nil) -> NativeVisionResult {
     NativeVisionResult(objectDetected: detected, objectCount: Int64(count), insideFrame: inside, sufficientCoverage: sufficient, sharpEnough: quality.blur >= config.minBlurScore, lightingAcceptable: quality.brightness >= config.minBrightness && quality.brightness <= config.maxBrightness, coverage: coverage, blurScore: quality.blur, brightnessScore: quality.brightness, issues: issues, handedness: handedness, yaw: nil, roll: nil, pitch: nil)
   }
+}
+
+private func logImageInput(_ path: String) {
+  #if DEBUG
+  let url = URL(fileURLWithPath: path)
+  let attributes = try? FileManager.default.attributesOfItem(atPath: path)
+  let byteCount = attributes?[.size] as? NSNumber
+  let data = try? Data(contentsOf: url, options: .mappedIfSafe)
+  let digest = data.map { SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined().prefix(12) }
+  let source = CGImageSourceCreateWithURL(url as CFURL, nil)
+  let properties = source.flatMap { CGImageSourceCopyPropertiesAtIndex($0, 0, nil) as? [CFString: Any] }
+  let exifOrientation = properties?[kCGImagePropertyOrientation] ?? "missing"
+  visionLog("palm input name=\(url.lastPathComponent) bytes=\(byteCount?.intValue ?? -1) sha256Prefix=\(digest.map(String.init) ?? "unavailable") exifOrientation=\(exifOrientation) sourcePixels=\(properties?[kCGImagePropertyPixelWidth] ?? "unknown")x\(properties?[kCGImagePropertyPixelHeight] ?? "unknown")")
+  #endif
+}
+
+private func visionLog(_ message: String) {
+  #if DEBUG
+  NSLog("%@", "[VisionAnalysis][iOS][r4] \(message)")
+  #endif
 }
 
 private struct ImageQuality {

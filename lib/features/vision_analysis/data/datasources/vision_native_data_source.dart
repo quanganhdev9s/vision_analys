@@ -26,7 +26,17 @@ class VisionNativeDataSource {
     Future<NativeVisionResult> Function() action,
   ) async {
     try {
-      return await action();
+      final result = await action();
+      if (kDebugMode) {
+        debugPrint(
+          '[VisionAnalysis][Flutter][r4] type=$type '
+          'detected=${result.objectDetected} count=${result.objectCount} '
+          'inside=${result.insideFrame} coverage=${result.coverage} '
+          'blur=${result.blurScore} brightness=${result.brightnessScore} '
+          'issues=${result.issues}',
+        );
+      }
+      return result;
     } on PlatformException catch (error, stackTrace) {
       debugPrint(
         '[VisionAnalysis] type=$type native error=${error.code}: ${error.message}',
@@ -55,6 +65,8 @@ class VisionNativeDataSource {
     'MODEL_NOT_AVAILABLE' =>
       'The hand detection model is not installed on this build.',
     'UNSUPPORTED_IMAGE' => 'This image format cannot be analyzed.',
+    'VISION_INFERENCE_CONTEXT' =>
+      'Face detection is unavailable in this iOS environment. Try on a physical iPhone.',
     _ => 'Native vision processing failed. Please try another image.',
   };
 }
